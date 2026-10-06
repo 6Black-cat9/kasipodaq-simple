@@ -1,0 +1,72 @@
+PRAGMA foreign_keys = ON;
+CREATE TABLE IF NOT EXISTS users (
+ id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL,
+ role TEXT NOT NULL CHECK(role IN ('ADMIN','CHAIRMAN','MEMBER')),
+ is_active INTEGER NOT NULL DEFAULT 1 CHECK(is_active IN (0,1)), version INTEGER NOT NULL DEFAULT 0,
+ created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS members (
+ id TEXT PRIMARY KEY, user_id TEXT UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ first_name TEXT NOT NULL, last_name TEXT NOT NULL, middle_name TEXT,
+ phone TEXT NOT NULL, position TEXT NOT NULL, department TEXT NOT NULL,
+ join_date TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('ACTIVE','INACTIVE')), avatar TEXT,
+ created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS members_search ON members(last_name,first_name);
+CREATE TABLE IF NOT EXISTS applications (
+ number INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT UNIQUE NOT NULL,
+ member_id TEXT NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
+ type TEXT NOT NULL CHECK(type IN ('MATERIAL','ONE_TIME','SOCIAL','OTHER')),
+ title TEXT NOT NULL, description TEXT NOT NULL, amount_cents INTEGER,
+ status TEXT NOT NULL CHECK(status IN ('NEW','IN_REVIEW','NEEDS_INFO','APPROVED','REJECTED','COMPLETED')),
+ created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS applications_owner ON applications(member_id,status);
+CREATE TABLE IF NOT EXISTS comments (
+ id TEXT PRIMARY KEY, application_id TEXT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+ user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT, text TEXT NOT NULL, created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS status_history (
+ id TEXT PRIMARY KEY, application_id TEXT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+ changed_by TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+ old_status TEXT, new_status TEXT NOT NULL, created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS files (
+ id TEXT PRIMARY KEY, original_name TEXT NOT NULL, stored_name TEXT UNIQUE NOT NULL,
+ mime TEXT NOT NULL, size INTEGER NOT NULL, owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+ created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS attachments (
+ id TEXT PRIMARY KEY, application_id TEXT NOT NULL REFERENCES applications(id) ON DELETE CASCADE,
+ file_id TEXT NOT NULL REFERENCES files(id) ON DELETE RESTRICT, created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS news (
+ id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT UNIQUE NOT NULL, short_description TEXT NOT NULL,
+ content TEXT NOT NULL, image TEXT, author_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+ status TEXT NOT NULL CHECK(status IN ('DRAFT','PUBLISHED')), published_at TEXT,
+ created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS documents (
+ id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL, category TEXT NOT NULL,
+ file_id TEXT NOT NULL REFERENCES files(id) ON DELETE RESTRICT,
+ uploaded_by TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS events (
+ id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL, date TEXT NOT NULL,
+ start_time TEXT NOT NULL, end_time TEXT NOT NULL, location TEXT NOT NULL,
+ image TEXT, organizer TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('UPCOMING','PAST','CANCELLED')),
+ created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS participants (
+ event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+ user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, created_at TEXT NOT NULL,
+ PRIMARY KEY(event_id,user_id)
+);
+CREATE TABLE IF NOT EXISTS notifications (
+ id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ title TEXT NOT NULL, message TEXT NOT NULL, type TEXT NOT NULL, link TEXT,
+ is_read INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS notifications_user ON notifications(user_id,is_read);
+CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, start INTEGER NOT NULL, hits INTEGER NOT NULL);

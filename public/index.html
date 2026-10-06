@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="kk">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#153f34" />
+    <meta
+      name="description"
+      content="Мектеп кәсіподағын басқару платформасы. Қызметкерлердің құқығы мен мүддесін қорғау."
+    />
+    <title>КӘСІПОДАҚ — мектеп кәсіподағы</title>
+    <link rel="stylesheet" href="assets/style.css" />
+    <script type="module" src="assets/app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Мазмұнға өту</a>
+    <div id="app">
+      <main class="loading" aria-live="polite">Жүктелуде…</main>
+    </div>
+    <div id="toasts" aria-live="polite"></div>
+    <dialog id="confirm">
+      <form method="dialog">
+        <div class="dialog-icon">!</div>
+        <h2>Жазбаны жою</h2>
+        <p>Бұл жазбаны жоюға сенімдісіз бе?</p>
+        <div class="actions">
+          <button value="cancel" class="btn secondary">Болдырмау</button
+          ><button value="yes" class="btn danger">Жою</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
